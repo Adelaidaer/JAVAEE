@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<f:metadata>
+    <f:viewAction action="#{documentController.loadDocument}" />
+    <f:viewAction action="#{citizenController.init}" />
+</f:metadata>
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Редактирование документа - Система клиентов</title>
+</h:head>
+
+<h:body>
+    <div id="header">
+        <h:form>
+            <p:menubar>
+                <p:menuitem value="Главная" icon="pi pi-home" outcome="index"/>
+                
+                <p:submenu label="Документы" icon="pi pi-file">
+                    <p:menuitem value="Список документов" outcome="document"/>
+                    <p:menuitem value="Добавить документ" outcome="document-edit"/>
+                </p:submenu>
+                
+                <p:submenu label="Граждане" icon="pi pi-users">
+                    <p:menuitem value="Список граждан" outcome="citizen"/>
+                    <p:menuitem value="Добавить гражданина" outcome="citizen-edit"/>
+                </p:submenu>
+                
+                <p:submenu label="Персоны" icon="pi pi-user">
+                    <p:menuitem value="Список персон" outcome="person"/>
+                    <p:menuitem value="Добавить персону" outcome="person-edit"/>
+                </p:submenu>
+                
+                <p:submenu label="Пользователи" icon="pi pi-cog">
+                    <p:menuitem value="Список пользователей" outcome="user"/>
+                    <p:menuitem value="Добавить пользователя" outcome="user-edit"/>
+                </p:submenu>
+                
+                <f:facet name="options">
+                    <p:button value="Вход" icon="pi pi-sign-in" outcome="login"/>
+                </f:facet>
+            </p:menubar>
+        </h:form>
+    </div>
+    
+    <div id="content" class="container">
+        <h1>Редактирование документа</h1>
+        
+        <p:messages id="messages" showDetail="true" closable="true"/>
+        
+        <!-- Отладочная информация -->
+        <p:panel header="Информация об объекте (только для отладки)" rendered="#{true}" styleClass="mb-3" toggleable="true" collapsed="true">
+            <p>ID документа: #{documentController.document.id}</p>
+            <p>EditID: #{documentController.editId}</p>
+            <p>Название документа: #{documentController.document.documentName}</p>
+            <p>Серия: #{documentController.document.series}</p>
+            <p>Орган выдачи: #{documentController.document.issuingAuthority}</p>
+            <p>ID выбранного гражданина: #{documentController.selectedCitizenId}</p>
+            <p>Гражданин: #{documentController.document.citizen != null ? documentController.document.citizen.lastName : 'Не выбран'}</p>
+        </p:panel>
+        
+        <h:form id="documentForm">
+            <!-- Скрытое поле для ID -->
+            <h:inputHidden value="#{documentController.document.id}" />
+            <!-- Скрытое поле для editId -->
+            <h:inputHidden value="#{documentController.editId}" />
+            
+            <p:panel header="Информация о документе">
+                <div class="p-field p-grid">
+                    <p:outputLabel for="documentName" styleClass="p-col-12 p-md-3" value="Название документа:"/>
+                    <div class="p-col-12 p-md-9">
+                        <p:inputText id="documentName" value="#{documentController.document.documentName}" required="true" requiredMessage="Введите название документа" style="width: 100%"/>
+                    </div>
+                </div>
+
+                <div class="p-field p-grid">
+                    <p:outputLabel for="citizen" styleClass="p-col-12 p-md-3" value="Гражданин:"/>
+                    <div class="p-col-12 p-md-9">
+                        <p:selectOneMenu id="citizen" value="#{documentController.selectedCitizenId}" style="width: 100%" required="true" requiredMessage="Выберите гражданина">
+                            <f:selectItem itemLabel="Выберите гражданина" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{citizenController.citizens}" var="cit" itemLabel="#{cit.lastName} #{cit.firstName} #{cit.patronymic}" itemValue="#{cit.id}"/>
+                            <p:ajax update="@this" />
+                        </p:selectOneMenu>
+                        <p:message for="citizen" />
+                    </div>
+                </div>
+
+                <div class="p-field p-grid">
+                    <p:outputLabel for="series" styleClass="p-col-12 p-md-3" value="Серия:"/>
+                    <div class="p-col-12 p-md-9">
+                        <p:inputText id="series" value="#{documentController.document.series}" style="width: 100%"/>
+                    </div>
+                </div>
+                
+                <div class="p-field p-grid">
+                    <p:outputLabel for="issuingAuthority" styleClass="p-col-12 p-md-3" value="Орган выдачи:"/>
+                    <div class="p-col-12 p-md-9">
+                        <p:inputTextarea id="issuingAuthority" value="#{documentController.document.issuingAuthority}" rows="3" style="width: 100%"/>
+                    </div>
+                </div>
+
+                <div class="p-field p-grid">
+                    <p:outputLabel for="issueDate" styleClass="p-col-12 p-md-3" value="Дата выдачи:"/>
+                    <div class="p-col-12 p-md-9">
+                        <p:calendar id="issueDate" value="#{documentController.document.issueDate}" pattern="dd.MM.yyyy" style="width: 100%">
+                            <f:convertDateTime pattern="dd.MM.yyyy" type="localDate"/>
+                        </p:calendar>
+                    </div>
+                </div>
+            </p:panel>
+            
+            <div class="p-d-flex p-jc-end mt-3">
+                <p:commandButton value="Отмена" styleClass="ui-button-secondary mr-2" immediate="true" action="document"/>
+                <p:commandButton value="Сохранить" icon="pi pi-check" styleClass="ui-button-primary" action="#{documentController.save}"/>
+            </div>
+        </h:form>
+    </div>
+    
+    <div id="footer">
+        <div class="container">
+            <p>© 2024 Информационная подсистема ведения клиентов - физических лиц</p>
+        </div>
+    </div>
+</h:body>
+
+</html> 
